@@ -1,0 +1,36 @@
+{
+    "model_name": "pulse-base-v1",
+    "version": "0.1.0",
+    "description": "PULSE v0.1 formula-based temporal embedding model. Encodes moments as 128D vectors fusing clock time with experiential time.",
+    "dim": 128,
+    "layers": {
+        "log_time": {"dim": 8, "type": "formula"},
+        "oscillators": {"dim": 32, "type": "formula", "n_frequencies": 16},
+        "circadian": {"dim": 8, "type": "formula", "cycles": ["24h", "12h", "90min"]},
+        "calendar": {"dim": 24, "type": "formula"},
+        "urgency": {"dim": 8, "type": "formula", "discount_rates": [0.05, 0.5, 5.0]},
+        "temporal_state": {"dim": 32, "type": "formula", "decay_scales_hours": [0.25, 1.0, 4.0, 12.0, 24.0, 72.0, 168.0, 720.0]},
+        "prediction_error": {"dim": 16, "type": "formula"}
+    },
+    "layer_weights": {
+        "log_time": 1.0,
+        "oscillators": 0.5,
+        "circadian": 1.5,
+        "calendar": 0.6,
+        "urgency": 4.0,
+        "temporal_state": 2.0,
+        "prediction_error": 3.0
+    },
+    "oscillator_periods_seconds": [3600, 7200, 14400, 21600, 28800, 43200, 86400, 172800, 604800, 1209600, 2592000, 7776000, 15552000, 31557600, 63115200, 126230400],
+    "normalization": "l2",
+    "framework": "numpy",
+    "license": "MIT",
+    "tags": [
+        "temporal-embeddings",
+        "time2vec",
+        "experiential-time",
+        "circadian",
+        "urgency",
+        "pulse"
+    ]
+}

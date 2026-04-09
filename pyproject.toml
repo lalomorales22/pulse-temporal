@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pulse-temporal"
+version = "0.1.0"
+description = "Experiential time embeddings for AI. Not timestamps -- time."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    {name = "Lalo Adrian Morales", email = "lalomorales22@gmail.com"},
+]
+keywords = [
+    "temporal-embeddings", "time2vec", "time-encoding", "circadian",
+    "urgency", "experiential-time", "temporal-ai", "pulse",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.21",
+]
+
+[project.optional-dependencies]
+torch = ["torch>=2.0"]
+daemon = ["aiosqlite>=0.19"]
+all = ["torch>=2.0", "aiosqlite>=0.19"]
+dev = ["pytest>=7.0", "pytest-cov"]
+
+[project.urls]
+Homepage = "https://github.com/lalomorales22/pulse-temporal"
+Repository = "https://github.com/lalomorales22/pulse-temporal"
+Issues = "https://github.com/lalomorales22/pulse-temporal/issues"
+
+[tool.setuptools.packages.find]
+include = ["pulse_temporal*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
