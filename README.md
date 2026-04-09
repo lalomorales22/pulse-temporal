@@ -322,7 +322,8 @@ pulse-temporal/
 ├── models/
 │   └── pulse-base-v1/             # formula-based encoder config
 ├── notebooks/
-│   └── train_on_colab.ipynb       # fine-tune on free Colab GPU
+│   ├── train_on_colab.ipynb       # fine-tune Qwen on free Colab GPU
+│   └── train_gemma4_colab.ipynb  # fine-tune Gemma 4 E2B (QLoRA, WIP)
 ├── examples/
 │   ├── basic_encoding.py          # encoding + similarity demo
 │   ├── daemon_setup.py            # daemon usage
@@ -343,6 +344,7 @@ pulse-temporal/
 | **trained LoRA adapter** | [lalopenguin/pulse-qwen-1.5b](https://huggingface.co/lalopenguin/pulse-qwen-1.5b) | Qwen 2.5 1.5B fine-tuned with temporal awareness |
 | **interactive demo** | [lalopenguin/pulse-temporal-demo](https://huggingface.co/spaces/lalopenguin/pulse-temporal-demo) | compare moments, encode, similarity matrix |
 | **training space** | [lalopenguin/pulse-temporal-train](https://huggingface.co/spaces/lalopenguin/pulse-temporal-train) | GPU training UI (needs HF Pro for ZeroGPU) |
+| **Gemma 4 notebook** | [train_gemma4_colab.ipynb](notebooks/train_gemma4_colab.ipynb) | QLoRA fine-tuning for Gemma 4 E2B (WIP) |
 
 ## roadmap
 
@@ -354,6 +356,9 @@ pulse-temporal/
 - [x] HuggingFace model card + demo Space
 - [x] training pipeline + synthetic data generator
 - [x] LoRA fine-tuned Qwen 2.5 1.5B with temporal awareness
+- [x] Tested Qwen model — temporal reasoning confirmed working
+- [x] GitHub repo: github.com/lalomorales22/pulse-temporal
+- [ ] Gemma 4 E2B LoRA training (blocked — see HANDOFF.md)
 - [ ] `pip install pulse-temporal` on PyPI
 
 ### v0.2 -- daemon + integrations

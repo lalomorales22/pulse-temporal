@@ -335,4 +335,110 @@ git push -u origin main
 
 ---
 
-*Built April 9, 2026. Chula Vista, California.*
+*Session 1 built April 9, 2026. Chula Vista, California.*
+
+---
+---
+
+# Session 2 — April 9, 2026 (afternoon)
+
+## What Was Done
+
+### 1. Git + GitHub
+- Made the first commit (36 files, 4910 lines)
+- Created public repo: https://github.com/lalomorales22/pulse-temporal
+- All pushed to `master` branch
+
+### 2. Tested the Trained Qwen 1.5B Model
+Loaded `lalopenguin/pulse-qwen-1.5b` from HuggingFace and ran 3 inference tests.
+The model works and demonstrates temporal reasoning:
+
+```
+TEST 1 (2am, 4h sleep, deadline in 30min): "Should I start complex refactoring?"
+PULSE: "15% cognitive, 10% energy, Monday 02:00 AM. Sleep deficit (4h) — expect ~20% more errors."
+
+TEST 2 (10:30am peak, well-rested, no deadlines): "What tasks should I tackle?"
+PULSE: "Strong. Go for complex debugging, architecture, research."
+
+TEST 3 (1:30pm post-lunch dip, deadline in 4h): "Push through or call it a day?"
+PULSE: "Circadian dip, not a wall. 15-min break restores."
+```
+
+**Verdict:** Training worked. Model learned temporal reasoning patterns. Responses are
+terse/telegraphic (expected for 1.5B params + template training data).
+
+### 3. Gemma 4 E2B Training Attempt (BLOCKED)
+Created `notebooks/train_gemma4_colab.ipynb` to fine-tune `google/gemma-4-E2B-it` (~5.1B params)
+with QLoRA on free Colab T4 GPU. Improved training data: 3000 examples (up from 2000),
+20 scenarios (up from 14), 20 question types (up from 15), richer natural responses.
+
+**The notebook hits multiple issues that were progressively fixed:**
+
+#### Issue 1: transformers too old for gemma4 (FIXED)
+```
+KeyError: 'gemma4'
+ValueError: model type `gemma4` but Transformers does not recognize this architecture
+```
+**Fix:** Install transformers from source: `pip install git+https://github.com/huggingface/transformers.git`
+Plus auto-restart Colab runtime so new version loads.
+
+#### Issue 2: Gemma4ClippableLinear not supported by PEFT (FIXED)
+```
+ValueError: Target module Gemma4ClippableLinear(...) is not supported.
+Currently, only: torch.nn.Linear, torch.nn.Embedding, ...
+```
+Gemma 4 wraps all Linear layers in a custom `Gemma4ClippableLinear` class.
+**Fix:** Unwrap 232 modules before applying LoRA:
+```python
+from transformers.models.gemma4.modeling_gemma4 import Gemma4ClippableLinear
+for name, module in list(model.named_modules()):
+    if isinstance(module, Gemma4ClippableLinear):
+        parts = name.rsplit('.', 1)
+        parent = model.get_submodule(parts[0])
+        setattr(parent, parts[1], module.linear)
+```
+
+#### Issue 3: Model too large for T4 VRAM (NOT YET FIXED)
+```
+ValueError: Some modules are dispatched on the CPU or the disk.
+Make sure you have enough GPU RAM to fit the quantized model.
+```
+Even with 4-bit quantization, Gemma 4 E2B's full architecture (5.1B params including
+multimodal components) doesn't fully fit in the T4's 16GB VRAM. Some modules get
+offloaded to CPU, which then causes:
+```
+AcceleratorError: CUDA error: an illegal memory access was encountered
+```
+This happens during training when the model tries to access CPU-offloaded modules
+from a CUDA kernel.
+
+**Possible solutions for next session:**
+1. **Use Gemma 3 4B instead** — single-modal, well-tested with LoRA, fits on T4
+2. **Use Colab A100** (paid, $9.99/mo Colab Pro) — 40GB VRAM, Gemma 4 E2B fits easily
+3. **Try aggressive memory optimization** — `max_memory` config, offload vision encoder only
+4. **Use Gemma 4 E2B GGUF** — quantized versions exist that might be smaller
+5. **Try `unsloth`** — optimized QLoRA library that reduces memory usage by ~60%
+
+### Files Changed/Added
+| File | Change |
+|---|---|
+| `notebooks/train_gemma4_colab.ipynb` | NEW — Gemma 4 QLoRA training notebook |
+| `examples/inference_trained.py` | Updated help text for Gemma 4 |
+| `README.md` | Added Gemma 4 notebook link, updated roadmap |
+| `HANDOFF.md` | Added session 2 notes |
+
+### Git Log (Session 2)
+```
+86d9b86 Initial commit: pulse-temporal v0.1.0
+5e43cb1 Add Gemma 4 E2B training notebook and improved training data
+22fcab6 Fix: install transformers from source for gemma4 architecture support
+6765de1 Fix Gemma 4 Colab: auto-restart runtime + trust_remote_code fallback
+fbecd85 Guard against restart loop in Colab install cell
+38a1e55 Fix: unwrap Gemma4ClippableLinear for PEFT/LoRA compatibility
+7ff9407 Fix torch.cuda total_mem -> removed, simplify GPU info print
+73caaae Fix QLoRA training: prepare_model_for_kbit_training + peft from source
+```
+
+---
+
+*Session 2: April 9, 2026 afternoon. Chula Vista, California.*
