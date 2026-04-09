@@ -123,8 +123,8 @@ def chat(model, tokenizer, device, encoder, context=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="models/pulse-qwen-1.5b", help="Path to LoRA adapter")
-    parser.add_argument("--base", default=None, help="Base model (auto-detected from pulse_config.json)")
+    parser.add_argument("--model", default="models/pulse-qwen-1.5b", help="Path or HF repo for LoRA adapter (e.g. lalopenguin/pulse-gemma4-e2b)")
+    parser.add_argument("--base", default=None, help="Base model (auto-detected from pulse_config.json, e.g. google/gemma-4-E2B-it)")
     parser.add_argument("--deadline", default=None, help="Active deadline (ISO timestamp)")
     parser.add_argument("--events", type=int, default=0, help="Events today")
     parser.add_argument("--sleep", type=float, default=7.0, help="Sleep hours")
