@@ -442,3 +442,106 @@ fbecd85 Guard against restart loop in Colab install cell
 ---
 
 *Session 2: April 9, 2026 afternoon. Chula Vista, California.*
+
+---
+---
+
+# Session 3 — April 9, 2026 (evening)
+
+## What Was Done
+
+### 1. MCP Server (`pulse_temporal/mcp_server.py`)
+Full MCP server exposing 8 tools over stdio JSON-RPC:
+- `get_temporal_context` — rich temporal context for LLM injection
+- `encode_moment` — encode a timestamp as 128D PULSE vector
+- `compare_moments` — experiential similarity between two moments
+- `log_event` — log events (meetings, breaks, task switches)
+- `add_deadline` / `complete_deadline` / `list_deadlines` — deadline management
+- `decompose_moment` — inspect all 7 signal layers
+
+Entry point: `pulse-mcp` CLI command (registered in pyproject.toml).
+
+### 2. Event Source Adapters (`pulse_temporal/adapters/`)
+- **GitAdapter** — reads git log, syncs commits as temporal events, activity summaries, file churn analysis
+- **ICalAdapter** — reads .ics files or iCal URLs, parses VEVENT blocks, today summaries, calendar sync
+
+### 3. LLM Middleware (`pulse_temporal/middleware.py`)
+- `PulseMiddleware` — auto-injects temporal context into any LLM API call
+- `pulse.chat(client, messages)` — OpenAI-compatible one-liner
+- `pulse.chat_anthropic(client, messages)` — Anthropic API support
+- `pulse.wrap_openai(client)` — drop-in wrapper for transparent injection
+- `pulse.get_temporal_system_prompt()` — standalone system prompt generation
+
+### 4. Published to PyPI
+**URL:** https://pypi.org/project/pulse-temporal/0.2.0/
+
+`pip install pulse-temporal` now works worldwide. Version 0.2.0.
+
+### 5. Model Card for pulse-qwen-1.5b
+Created and uploaded README.md to https://huggingface.co/lalopenguin/pulse-qwen-1.5b
+with training details, evaluation results, usage examples.
+
+### 6. Cleaned Up Training Space
+Rewrote `lalopenguin/pulse-temporal-train` Space:
+- Removed ZeroGPU dependency (no longer needs HF Pro)
+- Now a CPU-only data generation + config Space
+- Users generate/download training data, then use Colab notebooks for GPU training
+- Slimmed requirements from torch+transformers+peft to just numpy
+
+### 7. Gemma 3 4B Training Notebook
+Replaced the blocked Gemma 4 E2B notebook with `notebooks/train_gemma3_colab.ipynb`:
+- Uses **Unsloth** for ~60% memory reduction
+- **Gemma 3 4B** (text-only, fits T4 comfortably)
+- Pre-quantized 4-bit model: `unsloth/gemma-3-4b-it-unsloth-bnb-4bit`
+- Same 3000-example training data generator
+
+### 8. All Tests Passing
+102 tests total (up from 53):
+- `test_mcp_server.py` — 18 tests (tools + JSON-RPC protocol)
+- `test_adapters.py` — 17 tests (git + iCal adapters)
+- `test_middleware.py` — 12 tests (middleware injection)
+- Original 53 tests unchanged
+
+### Files Changed/Added
+| File | Change |
+|---|---|
+| `pulse_temporal/__init__.py` | Updated exports, version 0.2.0 |
+| `pulse_temporal/mcp_server.py` | NEW — MCP server with 8 tools |
+| `pulse_temporal/middleware.py` | NEW — LLM API middleware |
+| `pulse_temporal/adapters/__init__.py` | NEW — adapter exports |
+| `pulse_temporal/adapters/git_adapter.py` | NEW — git event source |
+| `pulse_temporal/adapters/ical_adapter.py` | NEW — iCal event source |
+| `tests/test_mcp_server.py` | NEW — 18 MCP tests |
+| `tests/test_adapters.py` | NEW — 17 adapter tests |
+| `tests/test_middleware.py` | NEW — 12 middleware tests |
+| `notebooks/train_gemma3_colab.ipynb` | NEW — Gemma 3 + Unsloth notebook |
+| `examples/training_space_app.py` | NEW — CPU-only training Space |
+| `pyproject.toml` | Version 0.2.0, new deps, pulse-mcp entry point |
+| `README.md` | Updated roadmap, structure, usage examples |
+| `HANDOFF.md` | Session 3 notes |
+
+---
+
+## What Still Needs Doing
+
+### Immediate
+- [ ] Rotate PyPI API token (was shared in conversation)
+- [ ] Test Gemma 3 notebook on actual Colab T4
+- [ ] Upload Gemma 3 notebook to HF repos
+
+### v0.3 -- Trained Encoder
+- [ ] ATUS data loader + preprocessing
+- [ ] Contrastive training pipeline (PyTorch)
+- [ ] Pretrained pulse-base-v1 weights (learned, not formula)
+- [ ] Perceptual time distortion loss
+
+### v0.4+ (Future)
+- [ ] Crowdsourced temporal perception dataset
+- [ ] Emotional arousal modulation layer
+- [ ] REST API for any LLM backend
+- [ ] Real-time event streaming
+- [ ] npm package
+
+---
+
+*Session 3: April 9, 2026 evening. Chula Vista, California.*

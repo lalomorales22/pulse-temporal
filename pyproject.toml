@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pulse-temporal"
-version = "0.1.0"
+version = "0.2.0"
 description = "Experiential time embeddings for AI. Not timestamps -- time."
 readme = "README.md"
 license = "MIT"
@@ -34,13 +34,18 @@ dependencies = [
 [project.optional-dependencies]
 torch = ["torch>=2.0"]
 daemon = ["aiosqlite>=0.19"]
-all = ["torch>=2.0", "aiosqlite>=0.19"]
+mcp = ["pulse-temporal[daemon]"]
+middleware = ["openai>=1.0", "anthropic>=0.20"]
+all = ["torch>=2.0", "aiosqlite>=0.19", "openai>=1.0", "anthropic>=0.20"]
 dev = ["pytest>=7.0", "pytest-cov"]
 
 [project.urls]
 Homepage = "https://github.com/lalomorales22/pulse-temporal"
 Repository = "https://github.com/lalomorales22/pulse-temporal"
 Issues = "https://github.com/lalomorales22/pulse-temporal/issues"
+
+[project.scripts]
+pulse-mcp = "pulse_temporal.mcp_server:main"
 
 [tool.setuptools.packages.find]
 include = ["pulse_temporal*"]

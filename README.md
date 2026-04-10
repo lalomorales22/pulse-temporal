@@ -270,30 +270,68 @@ print(context["urgency_summary"])
 # "project X deadline in 5 days 2 hours. current phase: afternoon_peak. you've been active for 6 hours today."
 ```
 
-### integrate with any LLM
+### integrate with any LLM (middleware)
 
 ```python
-from pulse_temporal import PulseDaemon
+from openai import OpenAI
+from pulse_temporal import PulseMiddleware
 
-daemon = PulseDaemon(db_path="~/.pulse/state.db")
-daemon.start()
+client = OpenAI()
+pulse = PulseMiddleware()
 
-# before every LLM call, inject temporal context
-def chat(user_message, llm_client):
-    temporal = daemon.get_temporal_context()
-    
-    system_prompt = f"""You have a sense of time. Here is your current temporal awareness:
-    
-    Current moment embedding: {temporal['embedding_summary']}
-    Time context: {temporal['urgency_summary']}
-    Circadian phase: {temporal['circadian_phase']}
-    Time since last interaction: {temporal['time_since_last_interaction']}
-    Behavioral note: {temporal['behavioral_note']}
-    Anomalies: {temporal['temporal_anomalies']}
-    
-    Use this temporal awareness naturally. Don't announce it -- just know it."""
-    
-    return llm_client.chat(system=system_prompt, user=user_message)
+# automatic temporal context injection -- one line
+response = pulse.chat(client, messages=[
+    {"role": "user", "content": "Should I tackle this complex bug now?"}
+])
+
+# or wrap the client for drop-in replacement
+client = pulse.wrap_openai(OpenAI())
+# now every call includes temporal context automatically
+client.chat.completions.create(model="gpt-4o", messages=[...])
+
+# works with Anthropic too
+from anthropic import Anthropic
+response = pulse.chat_anthropic(Anthropic(), messages=[
+    {"role": "user", "content": "Should I tackle this complex bug now?"}
+])
+```
+
+### MCP server (for Claude, ChatGPT, etc.)
+
+```bash
+# add to claude settings
+pulse-mcp
+```
+
+```json
+{
+  "mcpServers": {
+    "pulse-temporal": {
+      "command": "pulse-mcp"
+    }
+  }
+}
+```
+
+exposes 8 tools: `get_temporal_context`, `encode_moment`, `compare_moments`, `log_event`, `add_deadline`, `complete_deadline`, `list_deadlines`, `decompose_moment`.
+
+### event source adapters
+
+```python
+from pulse_temporal.adapters import GitAdapter, ICalAdapter
+from pulse_temporal.daemon import PulseDaemon
+
+daemon = PulseDaemon()
+
+# feed git activity into temporal context
+git = GitAdapter("/path/to/repo")
+git.sync(daemon)  # logs recent commits as events
+print(git.get_activity_summary(hours=24))
+
+# feed calendar events
+cal = ICalAdapter("https://calendar.google.com/...basic.ics")
+cal.sync(daemon)  # logs upcoming events
+print(cal.get_today_summary())
 ```
 
 ## project structure
@@ -303,6 +341,8 @@ pulse-temporal/
 ├── pulse_temporal/
 │   ├── __init__.py                # public API
 │   ├── encoder.py                 # PulseEncoder -- main embedding model
+│   ├── mcp_server.py              # MCP server (8 tools for LLM integration)
+│   ├── middleware.py              # LLM API middleware (OpenAI, Anthropic)
 │   ├── layers/
 │   │   ├── log_time.py            # weber's law compression (8D)
 │   │   ├── oscillators.py         # multi-frequency sinusoids (32D)
@@ -311,6 +351,9 @@ pulse-temporal/
 │   │   ├── urgency.py             # hyperbolic deadline proximity (8D)
 │   │   ├── temporal_state.py      # continuous-time event history (32D)
 │   │   └── prediction_error.py    # temporal surprise encoding (16D)
+│   ├── adapters/
+│   │   ├── git_adapter.py         # git commit/branch event source
+│   │   └── ical_adapter.py        # iCal/calendar event source
 │   ├── daemon/
 │   │   ├── pulse_daemon.py        # background heartbeat process
 │   │   └── state_db.py            # sqlite state management
@@ -319,18 +362,15 @@ pulse-temporal/
 │   │   └── temporal_tuner.py      # LoRA fine-tuning pipeline
 │   └── utils/
 │       └── similarity.py          # cosine, euclidean, temporal distance
-├── models/
-│   └── pulse-base-v1/             # formula-based encoder config
 ├── notebooks/
-│   ├── train_on_colab.ipynb       # fine-tune Qwen on free Colab GPU
-│   └── train_gemma4_colab.ipynb  # fine-tune Gemma 4 E2B (QLoRA, WIP)
+│   ├── train_on_colab.ipynb       # fine-tune Qwen 2.5 1.5B on free Colab
+│   └── train_gemma3_colab.ipynb   # fine-tune Gemma 3 4B with Unsloth
 ├── examples/
 │   ├── basic_encoding.py          # encoding + similarity demo
 │   ├── daemon_setup.py            # daemon usage
 │   ├── gradio_demo.py             # HF Space app (dark/orange theme)
 │   └── inference_trained.py       # chat with trained temporal LLM
-├── tests/                         # 53 tests
-├── train.sh                       # one-command training script
+├── tests/                         # 102 tests
 ├── pyproject.toml
 ├── LICENSE                        # MIT
 └── README.md
@@ -343,8 +383,8 @@ pulse-temporal/
 | **encoder model card** | [lalopenguin/pulse-base-v1](https://huggingface.co/lalopenguin/pulse-base-v1) | formula-based encoder config + colab notebook |
 | **trained LoRA adapter** | [lalopenguin/pulse-qwen-1.5b](https://huggingface.co/lalopenguin/pulse-qwen-1.5b) | Qwen 2.5 1.5B fine-tuned with temporal awareness |
 | **interactive demo** | [lalopenguin/pulse-temporal-demo](https://huggingface.co/spaces/lalopenguin/pulse-temporal-demo) | compare moments, encode, similarity matrix |
-| **training space** | [lalopenguin/pulse-temporal-train](https://huggingface.co/spaces/lalopenguin/pulse-temporal-train) | GPU training UI (needs HF Pro for ZeroGPU) |
-| **Gemma 4 notebook** | [train_gemma4_colab.ipynb](notebooks/train_gemma4_colab.ipynb) | QLoRA fine-tuning for Gemma 4 E2B (WIP) |
+| **training data space** | [lalopenguin/pulse-temporal-train](https://huggingface.co/spaces/lalopenguin/pulse-temporal-train) | generate + download training data |
+| **Gemma 3 notebook** | [train_gemma3_colab.ipynb](notebooks/train_gemma3_colab.ipynb) | QLoRA fine-tuning Gemma 3 4B with Unsloth |
 
 ## roadmap
 
@@ -358,14 +398,17 @@ pulse-temporal/
 - [x] LoRA fine-tuned Qwen 2.5 1.5B with temporal awareness
 - [x] Tested Qwen model — temporal reasoning confirmed working
 - [x] GitHub repo: github.com/lalomorales22/pulse-temporal
-- [ ] Gemma 4 E2B LoRA training (blocked — see HANDOFF.md)
-- [ ] `pip install pulse-temporal` on PyPI
+- [x] Gemma 3 4B LoRA training (Unsloth, fits free Colab T4)
+- [x] `pip install pulse-temporal` on PyPI
 
-### v0.2 -- daemon + integrations
-- [ ] calendar event source adapter
-- [ ] git activity event source
-- [ ] temporal context API for LLM injection
-- [ ] MCP server for Claude integration
+### v0.2 -- daemon + integrations (DONE)
+- [x] MCP server for Claude integration (`pulse-mcp` CLI)
+- [x] calendar event source adapter (iCal / .ics)
+- [x] git activity event source adapter
+- [x] LLM middleware (OpenAI, Anthropic, any chat-completion API)
+- [x] Gemma 3 4B training notebook (Unsloth + free Colab T4)
+- [x] 102 tests passing
+- [x] `pip install pulse-temporal` on PyPI
 
 ### v0.3 -- trained encoder
 - [ ] ATUS data loader + preprocessing
