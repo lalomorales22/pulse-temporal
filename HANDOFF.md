@@ -526,8 +526,8 @@ Replaced the blocked Gemma 4 E2B notebook with `notebooks/train_gemma3_colab.ipy
 
 ### Immediate
 - [ ] Rotate PyPI API token (was shared in conversation)
-- [ ] Test Gemma 3 notebook on actual Colab T4
-- [ ] Upload Gemma 3 notebook to HF repos
+- [ ] Test Gemma 3 notebook on Colab T4 or Kaggle (free GPU quota was exhausted during session 3)
+- [x] Upload Gemma 3 notebook to HF repos (uploaded to lalopenguin/pulse-base-v1)
 
 ### v0.3 -- Trained Encoder
 - [ ] ATUS data loader + preprocessing
